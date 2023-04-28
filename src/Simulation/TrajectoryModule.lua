@@ -9,13 +9,13 @@ function module:PositionWorld(serverTime, deltaTime)
     end
     local movers = CollectionService:GetTagged("Dynamic")
 
-    for _, value: BasePart in pairs(movers) do
+    for _, value: Part in movers do
         local basePos = value:GetAttribute("BasePos")
 
         value.Position = basePos + Vector3.new(0, math.sin(serverTime) * 3, 0)
         local PrevPosition = basePos + Vector3.new(0, math.sin(serverTime - deltaTime) * 3, 0)
 
-        value.Velocity = (value.Position - PrevPosition) / deltaTime
+        value.AssemblyLinearVelocity = (value.Position - PrevPosition) / deltaTime
     end
 end
 
@@ -24,7 +24,7 @@ function module:ServerInit()
         return
     end
     local movers = CollectionService:GetTagged("Dynamic")
-    for _, value: BasePart in pairs(movers) do
+    for _, value: BasePart in movers do
         value:SetAttribute("BasePos", value.Position)
     end
 end

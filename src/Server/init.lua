@@ -11,13 +11,13 @@ local RunService = game:GetService("RunService")
 
 local path = script.Parent
 
+local Sift = require(ReplicatedStorage.Packages.Sift)
+local PlayerDataPublic = require(ReplicatedStorage.Shared.Config.PlayerDataPublic)
 local Enums = require(path.Enums)
 local EventType = Enums.EventType
 local ServerChickynoid = require(script.ServerChickynoid)
 local CharacterData = require(path.Simulation.CharacterData)
 local BitBuffer = require(path.Vendor.BitBuffer)
-local DeltaTable = require(path.Vendor.DeltaTable)
-local WeaponsModule = require(script.WeaponsServer)
 local CollisionModule = require(path.Simulation.CollisionModule)
 local Antilag = require(path.Server.Antilag)
 local FastSignal = require(path.Vendor.FastSignal)
@@ -82,7 +82,7 @@ function ChickynoidServer:Setup()
     end)
 
     --If there are any players already connected, push them through the connection function
-    for _, player in pairs(game.Players:GetPlayers()) do
+    for _, player in Players:GetPlayers() do
         self:PlayerConnected(player)
     end
 
@@ -114,8 +114,6 @@ function ChickynoidServer:Setup()
         end
     end)
 
-    WeaponsModule:Setup(self)
-
     Antilag:Setup(self)
 
     --Load the mods
@@ -127,19 +125,7 @@ function ChickynoidServer:Setup()
 end
 
 function ChickynoidServer:PlayerConnected(player)
-    local playerRecord = self:AddConnection(player.UserId, player)
-	
-	if (playerRecord) then
-	    --Spawn the gui
-	    for _, child in pairs(game.StarterGui:GetChildren()) do
-	        local clone = child:Clone() :: ScreenGui
-	        if clone:IsA("ScreenGui") then
-	            clone.ResetOnSpawn = false
-	        end
-	        clone.Parent = playerRecord.player.PlayerGui
-		end
-	end
-
+    self:AddConnection(player.UserId, player)
 end
 
 function ChickynoidServer:AssignSlot(playerRecord)
@@ -176,10 +162,11 @@ function ChickynoidServer:AddConnection(userId, player)
 	playerRecord.firstSnapshot = false
 	playerRecord.pendingWorldState = true
     
-    playerRecord.allowedToSpawn = true
-    playerRecord.respawnDelay = 2
+    playerRecord.allowedToSpawn = false
+    playerRecord.respawnDelay = 0
     playerRecord.respawnTime = tick() + playerRecord.respawnDelay
-
+    playerRecord.data = Sift.Dictionary.copyDeep(PlayerDataPublic)
+    
     playerRecord.OnBeforePlayerSpawn = FastSignal.new()
 
     playerRecord.characterMod = "HumanoidChickynoid"
@@ -251,7 +238,6 @@ function ChickynoidServer:AddConnection(userId, player)
         if self.chickynoid then
             ChickynoidServer.OnPlayerDespawn:Fire(self)
 
-            print("Despawned!")
             self.chickynoid:Destroy()
             self.chickynoid = nil
             self.respawnTime = tick() + self.respawnDelay
@@ -299,9 +285,6 @@ function ChickynoidServer:AddConnection(userId, player)
     
     self.OnPlayerConnected:Fire(self, playerRecord)
     
-    --Connect!
-    WeaponsModule:OnPlayerConnected(self, playerRecord)
-
     --Tell everyone
     --TODO: Replace with a dirty flag?
 	self:SetWorldStateDirty()
@@ -317,7 +300,7 @@ function ChickynoidServer:SendEventToClients(event)
 end
 
 function ChickynoidServer:SetWorldStateDirty()
-	for _, data in pairs(self.playerRecords) do
+	for _, data in self.playerRecords do
 		data.pendingWorldState = true
 	end
 end
@@ -349,8 +332,6 @@ function ChickynoidServer:PlayerDisconnected(userId)
     local playerRecord = self.playerRecords[userId]
 
     if playerRecord then
-        print("Player disconnected")
-
 		playerRecord:Despawn()
 		
 		--nil this out
@@ -422,7 +403,6 @@ function ChickynoidServer:RobloxHeartbeat(deltaTime)
     
 	    --Much simpler - assumes server runs at 60.
 	    self.accumulatedTime = 0
-	    local frac = 1 / 60
 		self:Think(deltaTime)
 	end
 
@@ -494,14 +474,12 @@ function ChickynoidServer:Think(deltaTime)
         end
     end
 
-    for _, playerRecord in pairs(self.playerRecords) do
+    for _, playerRecord in self.playerRecords do
         if playerRecord.chickynoid then
             playerRecord.chickynoid:PostThink(self, deltaTime)
         end
     end
     
-    WeaponsModule:Think(self, deltaTime)
-
     local modules = ServerMods:GetMods("servermods")
 	for _, mod in pairs(modules) do
 		if (mod.Step) then

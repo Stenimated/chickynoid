@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RemoteEvent = ReplicatedStorage:WaitForChild("ChickynoidReplication") :: RemoteEvent
 
 local path = script.Parent.Parent
+local RoduxClient = require(ReplicatedStorage.Client.RoduxClient)
 local Simulation = require(path.Simulation)
 local ClientMods = require(path.Client.ClientMods)
 local CollisionModule = require(path.Simulation.CollisionModule)
@@ -31,9 +32,17 @@ ClientChickynoid.__index = ClientChickynoid
     @return ClientChickynoid
 ]=]
 function ClientChickynoid.new(position: Vector3, characterMod: string)
+    
+    -- Inject playerdata into simulation
+    local data = {public = RoduxClient.Store:GetState().playerData}
+
+    local connection = RoduxClient.Store.Changed:Connect(function(state)
+        data.public = state.playerData
+    end)
+
     local self = setmetatable({
 
-        simulation = Simulation.new(game.Players.LocalPlayer.UserId),
+        simulation = Simulation.new(game.Players.LocalPlayer.UserId, data),
         predictedCommands = {},
         stateCache = {},
         characterMod = characterMod,
@@ -41,6 +50,7 @@ function ClientChickynoid.new(position: Vector3, characterMod: string)
  
 
         mispredict = Vector3.new(0, 0, 0),
+        _connection = connection,
 
         debug = {
             processedCommands = 0,
@@ -255,6 +265,8 @@ function ClientChickynoid:ClearDebugSpheres()
     end
 end
 
-function ClientChickynoid:Destroy() end
+function ClientChickynoid:Destroy()
+    self._connection:Disconnect()
+end
 
 return ClientChickynoid

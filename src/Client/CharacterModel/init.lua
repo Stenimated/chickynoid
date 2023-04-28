@@ -1,3 +1,5 @@
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
 local CharacterModel = {}
 CharacterModel.__index = CharacterModel
 
@@ -120,7 +122,7 @@ function CharacterModel:CreateModel()
 		self.modelData = self.modelPool[self.userId]
 		self.model = self.modelData.model:Clone()
 		self.primaryPart = self.model.PrimaryPart
-		self.model.Parent = game.Lighting -- must happen to load animations		
+		self.model.Parent = Lighting -- must happen to load animations		
 
 		--Load on the animations			
 		self.animator = self.model:FindFirstChild("Animator", true)
@@ -142,7 +144,7 @@ function CharacterModel:CreateModel()
 
 		self.modelReady = true
 		self:PlayAnimation(self.startingAnimation, true)
-		self.model.Parent = game.Workspace
+		self.model.Parent = Workspace
 		self.onModelCreated:Fire(self.model)
 
 	end)()
@@ -183,7 +185,7 @@ end
 --you shouldnt ever have to call this directly, change the characterData to trigger this
 function CharacterModel:PlayAnimation(enum, force)
 	local name = "Idle"
-	for key, value in pairs(Enums.Anims) do
+	for key, value in Enums.Anims do
 		if value == enum then
 			name = key
 			break

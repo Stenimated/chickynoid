@@ -4,6 +4,10 @@
 ]=]
 
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local PlayerDataPublic = require(ReplicatedStorage.Shared.Config.PlayerDataPublic)
+
 local IsClient = RunService:IsClient()
 
 local Simulation = {}
@@ -15,7 +19,7 @@ local MathUtils = require(script.MathUtils)
 local Enums = require(script.Parent.Enums)
 local DeltaTable = require(script.Parent.Vendor.DeltaTable)
 
-function Simulation.new(userId)
+function Simulation.new(userId, playerData)
     local self = setmetatable({}, Simulation)
 
     self.userId = userId
@@ -37,7 +41,7 @@ function Simulation.new(userId)
     self.state.jumpThrust = 0
     self.state.pushing = 0 --External flag comes from server (ungh >_<')
     self.state.moveState = 0 --Walking!
-    
+    self.data = playerData :: PlayerDataPublic.PlayerData
 
     self.characterData = CharacterData.new()
 
@@ -73,7 +77,7 @@ end
 
 function Simulation:RegisterMoveState(name, updateState, alwaysThink, startState, endState)
     local index = 0
-    for key,value in pairs(self.moveStateNames) do
+    for key,value in self.moveStateNames do
         index+=1
     end
     self.moveStateNames[name] = index

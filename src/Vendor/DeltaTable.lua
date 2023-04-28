@@ -9,7 +9,7 @@ function module:MakeDeltaTable(oldTable, newTable)
     
     local deltaTable = {}
     local changes = 0
-    for var, data in pairs(newTable) do
+    for var, data in newTable do
         if oldTable[var] == nil then
             deltaTable[var] = data
         else
@@ -31,7 +31,7 @@ function module:MakeDeltaTable(oldTable, newTable)
         end
     end
     --Check for deletions
-    for var, _ in pairs(oldTable) do
+    for var, _ in oldTable do
         if newTable[var] == nil then
             if deltaTable.__deletions == nil then
                 deltaTable.__deletions = {}
@@ -54,7 +54,7 @@ function module:ApplyDeltaTable(target, deltaTable)
         newTable = {}
     end
 
-    for var, _ in pairs(deltaTable) do
+    for var, _ in deltaTable do
         if type(deltaTable[var]) == "table" then
 			newTable[var] = self:ApplyDeltaTable(target[var], deltaTable[var])
         else

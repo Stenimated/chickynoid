@@ -3,7 +3,7 @@ local module = {}
 local UNASSIGNED = -2
 local INSIDE = -1
 local EPSILON = 0.0001
-local NaN = math.NaN
+local NaN = 0/0
 local counter = 0
 
 --Notes: openSetTail correctly bumped to be 1-based
@@ -60,16 +60,6 @@ local function Face(v0, v1, v2, o0, o1, o2, normal)
     }
 end
 
-function FaceEquals(left, other)
-    return (left.Vertex0   == other.Vertex0)
-        and (left.Vertex1   == other.Vertex1)
-        and (left.Vertex2   == other.Vertex2)
-        and (left.Opposite0 == other.Opposite0)
-        and (left.Opposite1 == other.Opposite1)
-        and (left.Opposite2 == other.Opposite2)
-        and (left.Normal    == other.Normal)
-end
-
 local function PointFace(p, f, d) 
     return {
         Point = p,
@@ -117,33 +107,7 @@ local function HasEdge(f, e0, e1)
         or (f.Vertex2 == e0 and f.Vertex0 == e1)
 end
 
-local function VerifyFaces(points)
-    for kvpKey, kpvValue in pairs(faces) do
-        local fi = kvpKey
-        local face = kpvValue
 
-        assert(faces[face.Opposite0] ~= nil)
-		assert(faces[face.Opposite1] ~= nil)
-		assert(faces[face.Opposite2] ~= nil)
-
-		assert(face.Opposite0 ~= fi)
-		assert(face.Opposite1 ~= fi)
-		assert(face.Opposite2 ~= fi)
-
-        assert(face.Vertex0 ~= face.Vertex1)
-        assert(face.Vertex0 ~= face.Vertex2)
-        assert(face.Vertex1 ~= face.Vertex2)
-
-		assert(HasEdge(faces[face.Opposite0], face.Vertex2, face.Vertex1))
-		assert(HasEdge(faces[face.Opposite1], face.Vertex0, face.Vertex2))
-		assert(HasEdge(faces[face.Opposite2], face.Vertex1, face.Vertex0))
-
-       --[[ assert((face.Normal - Normal(
-                    points[face.Vertex0],
-                    points[face.Vertex1],
-                    points[face.Vertex2])).Magnitude < EPSILON)]]--
-    end
-end
  
 
 

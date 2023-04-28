@@ -15,7 +15,7 @@ function module:WritePlayerPositions(serverTime)
     local snapshot = {}
     snapshot.serverTime = serverTime
     snapshot.players = {}
-    for _, playerRecord in pairs(players) do
+    for _, playerRecord in players do
         if playerRecord.chickynoid then
             local record = {}
             record.position = playerRecord.chickynoid.simulation.characterData:GetPosition() --get current visual position
@@ -125,7 +125,7 @@ function module:Pop()
         end
     end
 
-    self.temporaryPositions = {}
+    table.clear(self.temporaryPositions)
 end
 
 return module

@@ -1,5 +1,4 @@
 local RunService = game:GetService("RunService")
-local CollectionService = game:GetService("CollectionService")
 
 local path = script.Parent.Parent
 
@@ -235,7 +234,7 @@ function module:FetchHullsForPoint(point)
     )
     local hullRecords = {}
     if cell then
-        for _, hull in pairs(cell :: table) do
+        for _, hull in cell do
             hullRecords[hull] = hull
         end
     end
@@ -247,7 +246,7 @@ function module:FetchHullsForPoint(point)
     )
     local hullRecords = {}
     if cell then
-        for _, hull in pairs(cell :: table) do
+        for _, hull in cell do
             hullRecords[hull] = hull
         end
     end
@@ -300,7 +299,7 @@ function module:FetchHullsForBox(min, max)
             for y = math.floor(miny / self.gridSize) - 1, math.ceil(maxy / self.gridSize) do
                 local cell = self:FetchCell(x, y, z)
                 if cell then
-                    for _, hull in pairs(cell :: table) do
+                    for _, hull in cell do
                         hullRecords[hull] = hull
                     end
                 end
@@ -321,7 +320,7 @@ function module:FetchHullsForBox(min, max)
             for y = math.floor(miny / self.fatGridSize) - 1, math.ceil(maxy / self.fatGridSize) do
                 local cell = self:FetchFatCell(x, y, z)
                 if cell then
-                    for _, hull in pairs(cell :: table) do
+                    for _, hull in cell do
                         hullRecords[hull] = hull
                     end
                 end
@@ -766,7 +765,7 @@ function module:Sweep(startPos, endPos)
             data.checks += 1
 
             self:CheckBrushNoStuck(data, hullRecord)
-            if data.allSolid == true then
+            if (data :: any).allSolid == true then
                 data.fraction = 0
                 break
             end
@@ -866,29 +865,27 @@ function module:MakeWorld(folder, playerSize)
             if (tick() - lastTime > maxTime) then
                 lastTime = tick()
       
-				wait()	
+				task.wait()	
 		
                 local progress = counter/total;
                 module.loadProgress = progress;
                 module.OnLoadProgressChanged:Fire(progress)
-				print("Collision processing: " .. math.floor(progress * 100) .. "%")
 			end
 	    end
         module.loadProgress = 1
         module.OnLoadProgressChanged:Fire(1)
-		print("Collision processing: 100%")
-		self.processing = false
 		
-		if (game["Run Service"]:IsServer()) then
-			print("Server Time Taken: ", math.floor(tick() - startTime), "seconds")
+        self.processing = false
+		
+		-- if (RunService:IsServer()) then
+		-- 	print("Server Time Taken: ", math.floor(tick() - startTime), "seconds")
 			
-		else
-			print("Client Time Taken: ", math.floor(tick() - startTime), "seconds")
-		end
-		print("Mesh time: ", meshTime, "seconds")
-		print("Tracing time:", MinkowskiSumInstance.timeSpentTracing, "seconds")
+		-- else
+		-- 	print("Client Time Taken: ", math.floor(tick() - startTime), "seconds")
+		-- end
+		-- print("Mesh time: ", meshTime, "seconds")
+		-- print("Tracing time:", MinkowskiSumInstance.timeSpentTracing, "seconds")
 		self:ClearCache()
- 
 	end)()
 	
 	

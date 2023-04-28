@@ -6,59 +6,30 @@ module.mods = {}
 	Registers a single ModuleScript as a mod.
 	@param mod ModuleScript -- Individual ModuleScript to be loaded as a mod.
 ]=]
-function module:RegisterMod(context: string, mod: ModuleScript)
-
-    if not mod:IsA("ModuleScript") then
-        warn("Attempted to load", mod:GetFullName(), "as a mod but it is not a ModuleScript")
-        return
+function module:RegisterMod(context: string, name: string, mod: {[any]: any})
+    if module.mods[context] == nil then
+        module.mods[context] = {}
     end
 
-    local contents = require(mod)
-
-    if (contents == nil) then
-        warn("Attempted to load", mod:GetFullName(), "as a mod, but it's contents is empty.")
-        return
-    end
-
-    if (self.mods[context] == nil) then
-        self.mods[context] = {}
-    end
-    
-    --Mark the name and priorty
-    if (contents.GetPriority ~= nil) then
-        contents.priority = contents:GetPriority()
+    if (mod.GetPriority ~= nil) then
+        mod.priority = mod:GetPriority()
     else
-        contents.priority = 0
+        mod.priority = 0
     end
-    contents.name = mod.Name
+    mod.name = name
     
-    table.insert(self.mods[context], contents)
+    table.insert(self.mods[context], mod)
     
     table.sort(self.mods[context], function(a,b)
         return a.priority > b.priority
     end)
 end
 
---[=[
-	Registers all descendants under this container as a mod.
-	@param container Instance -- Container holding mods.
-]=]
-function module:RegisterMods(context: string, container: Instance)
-
-    for _, mod in ipairs(container:GetDescendants()) do
-        if not mod:IsA("ModuleScript") then
-            continue
-        end
-
-        module:RegisterMod(context, mod)
-    end
-end
-
 function module:GetMod(context, name)
 
     local list = self.mods[context]
 
-    for key,contents in pairs(list) do
+    for key,contents in list do
         if (contents.name == name) then
             return contents
         end        

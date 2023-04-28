@@ -17,7 +17,6 @@ local ClientChickynoid = require(script.ClientChickynoid)
 local CollisionModule = require(path.Simulation.CollisionModule)
 local CharacterModel = require(script.CharacterModel)
 local CharacterData = require(path.Simulation.CharacterData)
-local ClientWeaponModule = require(path.Client.WeaponsClient)
 local FastSignal = require(path.Vendor.FastSignal)
 local ClientMods = require(path.Client.ClientMods)
 
@@ -95,8 +94,6 @@ ChickynoidClient.characterModelCallbacks = {}
 ChickynoidClient.flags = {}
 
  
-ChickynoidClient.weaponsClient = ClientWeaponModule;
-
 function ChickynoidClient:Setup()
     local eventHandler = {}
 
@@ -107,8 +104,6 @@ function ChickynoidClient:Setup()
     --EventType.ChickynoidAdded
     eventHandler[EventType.ChickynoidAdded] = function(event)
         local position = event.position
-        print("Chickynoid spawned at", position)
-
         if self.localChickynoid == nil then
             self.localChickynoid = ClientChickynoid.new(position, event.characterMod)
         end
@@ -157,7 +152,6 @@ function ChickynoidClient:Setup()
 
     -- EventType.WorldState
     eventHandler[EventType.WorldState] = function(event)
-        print("Got worldstate")
         self.worldState = event.worldState
     end
 
@@ -206,7 +200,6 @@ function ChickynoidClient:Setup()
         if func ~= nil then
             func(event)
         else
-            ClientWeaponModule:HandleEvent(self, event)
             self.OnNetworkEvent:Fire(self, event)
         end
     end)
@@ -289,13 +282,9 @@ function ChickynoidClient:Setup()
 
     --Load the mods
     local mods = ClientMods:GetMods("clientmods")
-    for _, mod in pairs(mods) do
+    for i, mod in pairs(mods) do
         mod:Setup(self)
-		print("Loaded", _)
     end
-
-    --WeaponModule
-    ClientWeaponModule:Setup(self)
 end
 
 function ChickynoidClient:GetClientChickynoid()
@@ -428,7 +417,6 @@ function ChickynoidClient:ProcessFrame(deltaTime)
                 --Step!
                 local command = self:GenerateCommand(pointInTimeToRender, frac)    
                 self.localChickynoid:Heartbeat(command, pointInTimeToRender, frac)
-                ClientWeaponModule:ProcessCommand(command)
 
                 count += 1
             end
@@ -459,12 +447,10 @@ function ChickynoidClient:ProcessFrame(deltaTime)
             --For this to work, the server has to accept deltaTime from the client
             local command = self:GenerateCommand(pointInTimeToRender, deltaTime) 
             self.localChickynoid:Heartbeat(command, pointInTimeToRender, deltaTime)
-            ClientWeaponModule:ProcessCommand(command)
         end
 
         if self.characterModel == nil and self.localChickynoid ~= nil then
             --Spawn the character in
-			print("Creating local model for UserId", game.Players.LocalPlayer.UserId)
 			local mod = self:GetPlayerDataByUserId(game.Players.LocalPlayer.UserId)
 			self.characterModel = CharacterModel.new( game.Players.LocalPlayer.UserId, mod.characterMod)
             for _, characterModelCallback in ipairs(self.characterModelCallbacks) do
@@ -620,12 +606,6 @@ function ChickynoidClient:ProcessFrame(deltaTime)
 
     end
 
-    --render in the rockets
-    -- local timeToRenderRocketsAt = self.estimatedServerTime
-    local timeToRenderRocketsAt = pointInTimeToRender --laggier but more correct
-
-	ClientWeaponModule:Think(timeToRenderRocketsAt, deltaTime)
-	
 	if (self.debugMarkPlayers ~= nil) then
 		self:DrawBoxOnAllPlayers(self.debugMarkPlayers)
         self.debugMarkPlayers = nil
@@ -854,8 +834,6 @@ function ChickynoidClient:AddPingToNetgraph(resimulate, serverHealthFps, network
 end
 
 function ChickynoidClient:IsConnectionBad()
-
-    local pings 
     if #self.pings > 10 and self.ping > 2000 then
         return true
     end
@@ -873,7 +851,7 @@ function ChickynoidClient:GenerateCommand(serverTime, deltaTime)
  
     local modules = ClientMods:GetMods("clientmods")
 
-    for key,mod in pairs(modules) do
+    for key,mod in modules do
         if (mod.GenerateCommand) then
             command = mod:GenerateCommand(command, serverTime, deltaTime)
         end

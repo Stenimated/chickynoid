@@ -30,7 +30,7 @@ function ServerChickynoid.new(playerRecord)
     local self = setmetatable({
         playerRecord = playerRecord,
 
-        simulation = Simulation.new(playerRecord.userId),
+        simulation = Simulation.new(playerRecord.userId, playerRecord.data),
 
         unprocessedCommands = {},
         commandSerial = 0,
@@ -155,7 +155,7 @@ function ServerChickynoid:Think(_server, _serverSimulationTime, deltaTime)
     local maxCommandsPerFrame = math.ceil(self.maxCommandsPerSecond * deltaTime)
     
 	local processCounter = 0
-	for _, command in pairs(self.unprocessedCommands) do
+	for _, command in self.unprocessedCommands do
  	
 		processCounter += 1
 		
@@ -166,8 +166,6 @@ function ServerChickynoid:Think(_server, _serverSimulationTime, deltaTime)
 		--Step simulation!
 		self.simulation:ProcessCommand(command)
 
-		--Fire weapons!
-		self.playerRecord:ProcessWeaponCommand(command)
 
 		command.processed = true
 
