@@ -22,12 +22,10 @@ local ClientMods = require(path.Client.ClientMods)
 CharacterModel.template = nil
 CharacterModel.characterModelCallbacks = {}
 
-
 function CharacterModel:ModuleSetup()
 	self.template = path.Assets:FindFirstChild("R15Rig")
 	self.modelPool = {}
 end
-
 
 function CharacterModel.new(userId, characterMod)
 	local self = setmetatable({
@@ -46,75 +44,68 @@ function CharacterModel.new(userId, characterMod)
 		mispredict = Vector3.new(0, 0, 0),
 		onModelCreated = FastSignal.new(),
 		onModelDestroyed = FastSignal.new(),
-
 	}, CharacterModel)
 
 	return self
 end
 
 function CharacterModel:CreateModel()
-
 	self:DestroyModel()
 
 	--print("CreateModel ", self.userId)
 	coroutine.wrap(function()
-
-		if (self.modelPool[self.userId] == nil) then
-
+		if self.modelPool[self.userId] == nil then
 			local srcModel = nil
 
 			-- Download custom character
 			for _, characterModelCallback in ipairs(self.characterModelCallbacks) do
-				local result = characterModelCallback(self.userId);
-				if (result) then
+				local result = characterModelCallback(self.userId)
+				if result then
 					srcModel = result:Clone()
 				end
 			end
 
 			--Check the character mod
-			if (srcModel == nil) then
-				if (self.characterMod) then
+			if srcModel == nil then
+				if self.characterMod then
 					local loadedModule = ClientMods:GetMod("characters", self.characterMod)
-					if (loadedModule and loadedModule.GetCharacterModel) then
+					if loadedModule and loadedModule.GetCharacterModel then
 						local template = loadedModule:GetCharacterModel(self.userId)
-						if (template) then
+						if template then
 							srcModel = template:Clone()
 						end
 					end
 				end
 			end
 
-			if (srcModel == nil) then
+			if srcModel == nil then
 				srcModel = self.template:Clone()
 				srcModel.Parent = game.Lighting --needs to happen so loadAppearance works
 
 				local userId = ""
 				local result, err = pcall(function()
-
 					userId = self.userId
 
 					--Bot id?
-					if (string.sub(userId, 1, 1) == "-") then
+					if string.sub(userId, 1, 1) == "-" then
 						userId = string.sub(userId, 2, string.len(userId)) --drop the -
 					end
 
 					local description = game.Players:GetHumanoidDescriptionFromUserId(userId)
 					srcModel.Humanoid:ApplyDescription(description)
-
 				end)
-				if (result == false) then
-					warn("Loading " .. userId .. ":" ..err)
+				if result == false then
+					warn("Loading " .. userId .. ":" .. err)
 				end
 			end
 
 			--setup the hip
-			local hip = (srcModel.HumanoidRootPart.Size.y
-				* 0.5) +srcModel.Humanoid.hipHeight
+			local hip = (srcModel.HumanoidRootPart.Size.y * 0.5) + srcModel.Humanoid.hipHeight
 
-			self.modelData =  { 
-				model =	srcModel, 
+			self.modelData = {
+				model = srcModel,
 
-				modelOffset =  Vector3.new(0, hip - 2.5, 0)
+				modelOffset = Vector3.new(0, hip - 2.5, 0),
 			}
 			self.modelPool[self.userId] = self.modelData
 		end
@@ -122,13 +113,13 @@ function CharacterModel:CreateModel()
 		self.modelData = self.modelPool[self.userId]
 		self.model = self.modelData.model:Clone()
 		self.primaryPart = self.model.PrimaryPart
-		self.model.Parent = Lighting -- must happen to load animations		
+		self.model.Parent = Lighting -- must happen to load animations
 
-		--Load on the animations			
+		--Load on the animations
 		self.animator = self.model:FindFirstChild("Animator", true)
-		if (not self.animator) then
+		if not self.animator then
 			local humanoid = self.model:FindFirstChild("Humanoid")
-			if (humanoid) then
+			if humanoid then
 				self.animator = self.template:FindFirstChild("Animator", true):Clone()
 				self.animator.Parent = humanoid
 			end
@@ -146,14 +137,11 @@ function CharacterModel:CreateModel()
 		self:PlayAnimation(self.startingAnimation, true)
 		self.model.Parent = Workspace
 		self.onModelCreated:Fire(self.model)
-
 	end)()
 end
 
-
 function CharacterModel:DestroyModel()
-
-	if (self.model == nil) then
+	if self.model == nil then
 		return
 	end
 	self.onModelDestroyed:Fire()
@@ -174,13 +162,11 @@ function CharacterModel:DestroyModel()
 end
 
 function CharacterModel:PlayerDisconnected(userId)
-
 	local modelData = self.modelPool[self.userId]
-	if (modelData and modelData.model) then
+	if modelData and modelData.model then
 		modelData.model:Destroy()
 	end
 end
-
 
 --you shouldnt ever have to call this directly, change the characterData to trigger this
 function CharacterModel:PlayAnimation(enum, force)
@@ -196,8 +182,7 @@ function CharacterModel:PlayAnimation(enum, force)
 		--Model not instantiated yet
 		self.startingAnimation = enum
 	else
-		if (self.modelData) then
-
+		if self.modelData then
 			local tracks = self.tracks
 			local track = tracks[name]
 			if track then
@@ -245,24 +230,11 @@ function CharacterModel:Think(_deltaTime, dataRecord, bulkMoveToList)
 		self.playingTrack:AdjustSpeed(playbackSpeed)
 	end
 
+	local newCF = CFrame.new(
+		dataRecord.pos + self.modelData.modelOffset + self.mispredict + Vector3.new(0, dataRecord.stepUp, 0)
+	) * CFrame.fromEulerAnglesXYZ(0, dataRecord.angle + math.rad(180), 0)
 
-	--[[
-	if (self.humanoid == nil) then
-		self.humanoid = self.model:FindFirstChild("Humanoid")
-	end]]--
-
-	--[[
-    if (self.humanoid and self.humanoid.Health <= 0) then
-        --its dead! Really this should never happen
-		self:DestroyModel()
-		self:CreateModel(self.userId)
-        return
-    end]]--
-
-	local newCF = CFrame.new(dataRecord.pos + self.modelData.modelOffset + self.mispredict + Vector3.new(0, dataRecord.stepUp, 0))
-		* CFrame.fromEulerAnglesXYZ(0, dataRecord.angle + math.rad(180), 0)
-
-	if (bulkMoveToList) then
+	if bulkMoveToList then
 		table.insert(bulkMoveToList.parts, self.primaryPart)
 		table.insert(bulkMoveToList.cframes, newCF)
 	else
@@ -273,7 +245,6 @@ end
 function CharacterModel:SetCharacterModel(callback)
 	table.insert(self.characterModelCallbacks, callback)
 end
-
 
 CharacterModel:ModuleSetup()
 
