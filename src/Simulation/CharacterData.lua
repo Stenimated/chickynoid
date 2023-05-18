@@ -94,6 +94,7 @@ function CharacterData:ModuleSetup()
 		angle = "Float16",
 		stepUp = "Float16",
 		flatSpeed = "Float16",
+		y = "Float16",
 		exclusiveAnimTime = "Number",
 
 		animCounter0 = "Byte",
@@ -104,13 +105,13 @@ function CharacterData:ModuleSetup()
 		animNum2 = "Byte",
 		animCounter3 = "Byte",
 		animNum3 = "Byte",
-		l = "Vector3",
 		state = "Byte",
 	}
 
 	self.lerpFunctions = {
 		pos = Lerp,
 		angle = AngleLerp,
+		y = AngleLerp,
 		stepUp = NumberLerp,
 		flatSpeed = NumberLerp,
 		exclusiveAnimTime = Raw,
@@ -123,7 +124,6 @@ function CharacterData:ModuleSetup()
 		animNum2 = Raw,
 		animCounter3 = Raw,
 		animNum3 = Raw,
-		l = Lerp,
 		state = Raw,
 	}
 end
@@ -136,6 +136,7 @@ function CharacterData.new()
 			stepUp = 0,
 			flatSpeed = 0,
 			exclusiveAnimTime = 0,
+			y = 0,
 
 			animCounter0 = 0,
 			animNum0 = 0,
@@ -145,7 +146,6 @@ function CharacterData.new()
 			animNum2 = 0,
 			animCounter3 = 0,
 			animNum3 = 0,
-			l = Vector3.zero,
 			state = 0,
 		},
 

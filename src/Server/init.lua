@@ -54,7 +54,7 @@ ChickynoidServer.playerSize = Vector3.new(2, 5, 2)
 	Server config for Chickynoid.
 ]=]
 ChickynoidServer.config = {
-	maxPlayers = 255,
+	maxPlayers = 32,
 	fpsMode = Enums.FpsMode.Hybrid,
 	serverHz = 20,
 	antiWarp = false,

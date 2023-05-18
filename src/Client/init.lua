@@ -41,7 +41,7 @@ ChickynoidClient.startTime = tick()
 ChickynoidClient.characters = {}
 ChickynoidClient.localFrame = 0
 ChickynoidClient.worldState = nil
-ChickynoidClient.fpsMax = 120 --Think carefully about changing this! Every extra frame clients make, puts load on the server
+ChickynoidClient.fpsMax = 500 --Think carefully about changing this! Every extra frame clients make, puts load on the server
 ChickynoidClient.fpsIsCapped = true --Dynamically sets to true if your fps is fpsMax + 5
 ChickynoidClient.fpsMin = 25 --If you're slower than this, your step will be broken up
 

@@ -1,5 +1,7 @@
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local CharacterModel = {}
 CharacterModel.__index = CharacterModel
 
@@ -18,6 +20,8 @@ local path = script.Parent.Parent
 local Enums = require(path.Enums)
 local FastSignal = require(path.Vendor.FastSignal)
 local ClientMods = require(path.Client.ClientMods)
+
+local VBAEnums = require(ReplicatedStorage.Shared.Enums)
 
 CharacterModel.template = nil
 CharacterModel.characterModelCallbacks = {}
@@ -202,7 +206,7 @@ function CharacterModel:PlayAnimation(enum, force)
 	end
 end
 
-function CharacterModel:Think(_deltaTime, dataRecord, bulkMoveToList)
+function CharacterModel:Think(deltaTime, dataRecord, bulkMoveToList)
 	if self.model == nil then
 		return
 	end
@@ -233,6 +237,17 @@ function CharacterModel:Think(_deltaTime, dataRecord, bulkMoveToList)
 	local newCF = CFrame.new(
 		dataRecord.pos + self.modelData.modelOffset + self.mispredict + Vector3.new(0, dataRecord.stepUp, 0)
 	) * CFrame.fromEulerAnglesXYZ(0, dataRecord.angle + math.rad(180), 0)
+
+	if dataRecord.state == VBAEnums.Actions.Spike and dataRecord.y then
+		local dir = CFrame.lookAt(
+			newCF.Position,
+			newCF.Position + (-Vector3.new(newCF.LookVector.X, dataRecord.y, newCF.LookVector.Z) * 100)
+		)
+
+		local z = dir:ToOrientation()
+		-- adjust the angle to the direction
+		newCF = newCF * CFrame.Angles(-z * deltaTime, 0, 0)
+	end
 
 	if bulkMoveToList then
 		table.insert(bulkMoveToList.parts, self.primaryPart)
