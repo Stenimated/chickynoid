@@ -241,12 +241,10 @@ function CharacterModel:Think(deltaTime, dataRecord, bulkMoveToList)
 	if dataRecord.state == VBAEnums.Actions.Spike and dataRecord.y then
 		local dir = CFrame.lookAt(
 			newCF.Position,
-			newCF.Position + (-Vector3.new(newCF.LookVector.X, dataRecord.y, newCF.LookVector.Z) * 100)
+			newCF.Position + (Vector3.new(newCF.LookVector.X, dataRecord.y, newCF.LookVector.Z) * 100)
 		)
 
-		local z = dir:ToOrientation()
-		-- adjust the angle to the direction
-		newCF = newCF * CFrame.Angles(-z * deltaTime, 0, 0)
+		newCF = CFrame.new(newCF.Position) * CFrame.fromEulerAnglesXYZ(dir:toEulerAnglesXYZ())
 	end
 
 	if bulkMoveToList then

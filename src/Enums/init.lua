@@ -63,7 +63,6 @@ Enums.Crashland = {
 	FULL_BHOP_FORWARD = 2,
 	CAPPED_BHOP = 3,
 	CAPPED_BHOP_FORWARD = 4,
-
 }
 
 return Enums

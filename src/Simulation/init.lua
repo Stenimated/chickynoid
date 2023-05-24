@@ -44,6 +44,7 @@ function Simulation.new(userId, playerData)
 	self.state.jumpThrust = 0
 	self.state.pushing = 0 --External flag comes from server (ungh >_<')
 	self.state.moveState = 0 --Walking!
+
 	self.data = playerData :: PlayerDataPublic.PlayerData
 
 	self.characterData = CharacterData.new()
